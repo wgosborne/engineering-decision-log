@@ -1,65 +1,227 @@
-import Image from "next/image";
+'use client';
+
+// ============================================================================
+// HOME PAGE - Notion-Style Decision Journal
+// ============================================================================
+// Purpose: Quick entry + grid view of decisions with slide-over for details
+// ============================================================================
+
+import { useEffect, useState, useMemo } from 'react';
+import { Decision, DecisionCategory, DecisionType } from '@/lib/types/decisions';
+import { QuickDecisionEntry } from '@/components/decisions/QuickDecisionEntry';
+import { DecisionGridCard } from '@/components/decisions/DecisionGridCard';
+import { DecisionForm } from '@/components/decisions/DecisionForm';
+import { ProjectNotebooks } from '@/components/layout/ProjectNotebooks';
+import { Sheet } from '@/components/ui/Sheet';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { apiGet } from '@/lib/api/client';
+import { FileText } from 'lucide-react';
+import { formatRelativeDate } from '@/lib/utils/formatting';
+
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [decisions, setDecisions] = useState<Decision[]>([]);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedDecision, setSelectedDecision] = useState<Partial<Decision> | null>(null);
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDecisions = async () => {
+      try {
+        const data = await apiGet<{ decisions: Decision[]; total: number }>(
+          '/api/decisions?limit=50&sort=date-desc'
+        );
+        setDecisions(data.decisions);
+      } catch (error) {
+        console.error('Failed to fetch decisions:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDecisions();
+  }, []);
+
+  const handleQuickEntryExpand = (data: {
+    title: string;
+    category: DecisionCategory;
+    chosen_option: string;
+    reasoning: string;
+  }) => {
+    setSelectedDecision({
+      ...data,
+      business_context: '',
+      problem_statement: '',
+      confidence_level: 5,
+      decision_type: DecisionType.SomewhatReversible,
+      optimized_for: [],
+      tradeoffs_accepted: [],
+      tradeoffs_rejected: [],
+      project_name: '',
+      tags: [],
+      stakeholders: [],
+      assumptions: [],
+      invalidation_conditions: [],
+      next_review_date: null,
+      revisit_reason: null,
+      flagged_for_review: false,
+      notes: '',
+      similar_decision_ids: [],
+      related_decision_ids: [],
+      similarity_notes: [],
+    });
+    setFormMode('create');
+    setIsSheetOpen(true);
+  };
+
+  const handleCardClick = (decision: Decision) => {
+    setSelectedDecision(decision);
+    setFormMode('edit');
+    setIsSheetOpen(true);
+  };
+
+  const handleFormSuccess = (decision: Decision) => {
+    if (formMode === 'create') {
+      setDecisions([decision, ...decisions]);
+    } else {
+      setDecisions(decisions.map((d) => (d.id === decision.id ? decision : d)));
+    }
+    setIsSheetOpen(false);
+    setSelectedDecision(null);
+  };
+
+  const handleSheetClose = () => {
+    setIsSheetOpen(false);
+    setSelectedDecision(null);
+  };
+
+  const handleDelete = () => {
+    if (selectedDecision?.id) {
+      setDecisions(decisions.filter((d) => d.id !== selectedDecision.id));
+    }
+    setIsSheetOpen(false);
+    setSelectedDecision(null);
+  };
+
+  // Calculate project notebooks with stats
+  const projectNotebooks = useMemo(() => {
+    const projectMap = new Map<string, { count: number; recentDate: string }>();
+
+    decisions.forEach((decision) => {
+      if (decision.project_name) {
+        const existing = projectMap.get(decision.project_name);
+        if (existing) {
+          existing.count++;
+          // Keep the most recent date
+          if (decision.date_created > existing.recentDate) {
+            existing.recentDate = decision.date_created;
+          }
+        } else {
+          projectMap.set(decision.project_name, {
+            count: 1,
+            recentDate: decision.date_created,
+          });
+        }
+      }
+    });
+
+    return Array.from(projectMap.entries())
+      .map(([name, stats]) => ({
+        name,
+        count: stats.count,
+        color: '', // Will be assigned by the component
+        recentDate: formatRelativeDate(stats.recentDate),
+      }))
+      .sort((a, b) => b.count - a.count); // Sort by count descending
+  }, [decisions]);
+
+  // Filter decisions by selected project
+  const filteredDecisions = useMemo(() => {
+    if (!selectedProject) return decisions;
+    return decisions.filter((d) => d.project_name === selectedProject);
+  }, [decisions, selectedProject]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" text="Loading decisions..." />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-black mb-2">
+            Decision Journal
+            <span className="inline-block w-2 h-2 rounded-full bg-gradient-to-r from-[#8B5CF6] via-[#DA70D6] to-[#FF99C8] ml-2 animate-pulse"></span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-sm text-gray-600">
+            Track your decisions and improve your decision-making over time
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Quick Entry */}
+        <div className="mb-6">
+          <QuickDecisionEntry onExpand={handleQuickEntryExpand} />
         </div>
-      </main>
-    </div>
+
+        {/* Project Notebooks */}
+        {projectNotebooks.length > 0 && (
+          <ProjectNotebooks
+            projects={projectNotebooks}
+            selectedProject={selectedProject}
+            onProjectSelect={setSelectedProject}
+          />
+        )}
+
+        {/* Decisions Grid */}
+        {filteredDecisions.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredDecisions.map((decision) => (
+                <DecisionGridCard
+                  key={decision.id}
+                  decision={decision}
+                  onClick={() => handleCardClick(decision)}
+                />
+              ))}
+          </div>
+        ) : selectedProject ? (
+          <EmptyState
+            icon={FileText}
+            title={`No decisions in ${selectedProject}`}
+            description="This project doesn't have any decisions yet"
+          />
+        ) : (
+          <EmptyState
+            icon={FileText}
+            title="No decisions yet"
+            description="Start by adding your first decision using the quick entry above"
+          />
+        )}
+      </div>
+
+      {/* Slide-over Sheet with Full Form */}
+      <Sheet
+        isOpen={isSheetOpen}
+        onClose={handleSheetClose}
+        title={formMode === 'create' ? 'New Decision' : 'Edit Decision'}
+      >
+        {selectedDecision && (
+          <DecisionForm
+            decision={selectedDecision as Decision}
+            mode={formMode}
+            onSuccess={handleFormSuccess}
+            onCancel={handleSheetClose}
+            onDelete={formMode === 'edit' ? handleDelete : undefined}
+            className="max-w-none"
+          />
+        )}
+      </Sheet>
+    </>
   );
 }
