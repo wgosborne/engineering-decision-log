@@ -72,29 +72,13 @@ export function Header({ className }: HeaderProps) {
 
           {/* Right side - Desktop */}
           <div className="hidden md:flex items-center gap-4">
-            {user && (
-              <>
-                <Link
-                  href="/decisions/new"
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
-                >
-                  New Decision
-                </Link>
-                <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <User className="h-4 w-4" />
-                    <span className="max-w-[150px] truncate">{user.email}</span>
-                  </div>
-                  <button
-                    onClick={() => signOut()}
-                    className="p-2 text-gray-600 hover:text-black transition-colors"
-                    title="Sign out"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </div>
-              </>
-            )}
+            {/* DEV BRANCH: Authentication disabled - always show New Decision button */}
+            <Link
+              href="/decisions/new"
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
+            >
+              New Decision
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -135,33 +119,14 @@ export function Header({ className }: HeaderProps) {
                 </Link>
               );
             })}
-            {user && (
-              <>
-                <Link
-                  href="/decisions/new"
-                  className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  New Decision
-                </Link>
-                <div className="pt-2 border-t border-gray-200">
-                  <div className="px-3 py-2 text-sm text-gray-600 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full px-3 py-2 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-50 rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </button>
-                </div>
-              </>
-            )}
+            {/* DEV BRANCH: Authentication disabled - always show New Decision button */}
+            <Link
+              href="/decisions/new"
+              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              New Decision
+            </Link>
           </nav>
         </div>
       )}

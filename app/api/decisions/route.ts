@@ -27,15 +27,8 @@ import { getSearchMetadata } from '@/lib/supabase/queries';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return unauthorizedResponse('You must be logged in to create decisions');
-    }
+    // DEV BRANCH: Authentication disabled - use public user ID
+    const PUBLIC_USER_ID = '00000000-0000-0000-0000-000000000000';
 
     // Parse request body
     const body = await request.json();
@@ -46,10 +39,10 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(validation.errors);
     }
 
-    // Create decision with user_id from auth session
+    // Create decision with public user_id
     const decision = await createDecision({
       ...body,
-      user_id: user.id,
+      user_id: PUBLIC_USER_ID,
     });
 
     // Return created decision

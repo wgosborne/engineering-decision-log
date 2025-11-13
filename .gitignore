@@ -35,6 +35,11 @@ yarn-error.log*
 .env.local
 .env*.local
 
+# But allow example/template env files
+!.env.local.example
+!.env.dev
+!.env.prod
+
 # vercel
 .vercel
 
