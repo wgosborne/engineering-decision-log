@@ -76,8 +76,8 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <div className="w-full px-175 text-center">
+      <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="w-full lg:w-[35%] mx-auto text-center">
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <h2 className="text-xl font-bold text-green-900 mb-2">
               Account Created!
@@ -92,8 +92,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      <div className="w-full px-175">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="w-full lg:w-[35%] mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">
