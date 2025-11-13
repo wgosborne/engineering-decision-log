@@ -174,9 +174,10 @@ export async function listDecisions(
   // Apply filters
   if (search) {
     // Full-text search using PostgreSQL's plainto_tsquery for better typo handling
+    // Uses 'simple' config to avoid filtering stop words (have, the, is, etc.)
     query = query.textSearch('search_vector', search, {
       type: 'plain',
-      config: 'english',
+      config: 'simple',
     });
   }
 

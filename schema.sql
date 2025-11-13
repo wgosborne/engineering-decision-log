@@ -161,23 +161,25 @@ CREATE TRIGGER trigger_update_decisions_timestamp
     EXECUTE FUNCTION update_updated_timestamp();
 
 -- Function to auto-populate full-text search vector
+-- Note: Uses 'simple' config to avoid filtering stop words (have, the, is, etc.)
 CREATE OR REPLACE FUNCTION update_search_vector()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.search_vector :=
-        setweight(to_tsvector('english', COALESCE(NEW.title, '')), 'A') ||
-        setweight(to_tsvector('english', COALESCE(NEW.business_context, '')), 'B') ||
-        setweight(to_tsvector('english', COALESCE(NEW.problem_statement, '')), 'B') ||
-        setweight(to_tsvector('english', COALESCE(NEW.reasoning, '')), 'B') ||
-        setweight(to_tsvector('english', COALESCE(NEW.chosen_option, '')), 'C') ||
-        setweight(to_tsvector('english', COALESCE(NEW.notes, '')), 'D');
+        setweight(to_tsvector('simple', COALESCE(NEW.title, '')), 'A') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.business_context, '')), 'B') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.problem_statement, '')), 'B') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.reasoning, '')), 'B') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.chosen_option, '')), 'C') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.notes, '')), 'D');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to auto-update search_vector on insert or update
+-- Note: Fires on ANY column update to keep search vector current
 CREATE TRIGGER trigger_update_search_vector
-    BEFORE INSERT OR UPDATE OF title, business_context, problem_statement, reasoning, chosen_option, notes
+    BEFORE INSERT OR UPDATE
     ON decisions
     FOR EACH ROW
     EXECUTE FUNCTION update_search_vector();
