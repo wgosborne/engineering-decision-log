@@ -3,9 +3,11 @@
 // ============================================================================
 // Methods: POST (create), GET (list with filtering)
 // Purpose: Create new decisions and list/search existing decisions
+// Auth: Requires authenticated user via Supabase Auth
 // ============================================================================
 
 import { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { createDecision, listDecisions } from '@/lib/api/decisions-service';
 import { validateCreateDecision } from '@/lib/api/validation';
 import {
@@ -14,6 +16,7 @@ import {
   badRequestResponse,
   handleApiError,
   successResponse,
+  unauthorizedResponse,
 } from '@/lib/api/responses';
 import { DecisionCategory } from '@/lib/types/decisions';
 import { getSearchMetadata } from '@/lib/supabase/queries';
@@ -24,6 +27,16 @@ import { getSearchMetadata } from '@/lib/supabase/queries';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return unauthorizedResponse('You must be logged in to create decisions');
+    }
+
     // Parse request body
     const body = await request.json();
 
@@ -33,8 +46,11 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(validation.errors);
     }
 
-    // Create decision
-    const decision = await createDecision(body);
+    // Create decision with user_id from auth session
+    const decision = await createDecision({
+      ...body,
+      user_id: user.id,
+    });
 
     // Return created decision
     return createdResponse(decision);
@@ -129,11 +145,24 @@ export async function GET(request: NextRequest) {
       offset,
     };
 
-    // Fetch decisions and metadata in parallel
-    const [result, metadata] = await Promise.all([
-      listDecisions(params),
-      getSearchMetadata(),
-    ]);
+    // Fetch decisions
+    const result = await listDecisions(params);
+
+    // Try to fetch metadata, but don't fail if it errors
+    let metadata;
+    try {
+      metadata = await getSearchMetadata();
+    } catch (error) {
+      console.error('Failed to fetch metadata, using empty defaults:', error);
+      // Return empty metadata if fetch fails
+      metadata = {
+        availableCategories: [],
+        availableProjects: [],
+        availableTags: [],
+        confidenceRange: undefined,
+        outcomeStats: { total: 0, pending: 0, success: 0, failed: 0 },
+      };
+    }
 
     // Return results with metadata
     return successResponse({

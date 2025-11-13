@@ -3,11 +3,17 @@
 // ============================================================================
 // Purpose: Database query functions for search and metadata
 // Usage: Call from API routes and services
+// Note: These functions need to be updated to accept a Supabase client parameter
+//       For now, they use the old client pattern (will be refactored)
 // ============================================================================
 
-import { supabase } from './client';
+import { createClient } from './client';
 import { DecisionCategory } from '@/lib/types/decisions';
 import { SearchMetadata } from '@/lib/types/search';
+
+// Create a client instance for these utility functions
+// TODO: Refactor these to accept client as parameter
+const supabase = createClient();
 
 // ============================================================================
 // METADATA QUERIES

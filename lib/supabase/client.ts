@@ -1,12 +1,12 @@
 // ============================================================================
-// SUPABASE CLIENT
+// SUPABASE CLIENT - BROWSER
 // ============================================================================
-// Purpose: Initialize and export Supabase client for database operations
-// Usage: Import 'supabase' from this file in services and API routes
-// Setup: Requires NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Purpose: Browser-side Supabase client with auth support
+// Usage: Import 'createClient' in Client Components only
+// Note: This uses cookies for session management via @supabase/ssr
 // ============================================================================
 
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 // ============================================================================
 // ENVIRONMENT VARIABLES
@@ -33,23 +33,16 @@ if (!supabaseAnonKey) {
 }
 
 // ============================================================================
-// SUPABASE CLIENT INITIALIZATION
+// BROWSER CLIENT (for Client Components)
 // ============================================================================
 
 /**
- * Supabase client instance
- * Used for all database operations throughout the app
+ * Create a Supabase client for browser/client components
+ * This client automatically manages auth sessions via cookies
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    // Currently no auth, but ready for future implementation
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-  db: {
-    schema: 'public',
-  },
-});
+export function createClient() {
+  return createBrowserClient(supabaseUrl!, supabaseAnonKey!);
+}
 
 // ============================================================================
 // TYPE-SAFE DATABASE TYPES (Generated from Supabase)
@@ -100,34 +93,3 @@ export function formatSupabaseError(error: any): string {
       return error.message || 'Database operation failed';
   }
 }
-
-/**
- * Check if Supabase client is properly initialized
- * @returns True if client is ready
- */
-export function isSupabaseReady(): boolean {
-  try {
-    return !!(supabase && supabaseUrl && supabaseAnonKey);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Test database connection
- * @returns True if connection is successful
- */
-export async function testDatabaseConnection(): Promise<boolean> {
-  try {
-    const { error } = await supabase.from('decisions').select('count').limit(1);
-    return !error;
-  } catch {
-    return false;
-  }
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export default supabase;

@@ -4,9 +4,11 @@
 // Purpose: Centralized database operations and business logic for decisions
 // Usage: Import these functions in API routes to handle CRUD operations
 // Database: Works with Supabase PostgreSQL client
+// Note: Uses browser client - these functions should be refactored to accept
+//       a server client parameter when called from API routes
 // ============================================================================
 
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import {
   Decision,
   NewDecision,
@@ -16,6 +18,10 @@ import {
   OptimizedFor,
   DecisionType,
 } from '@/lib/types/decisions';
+
+// Create a client instance for these service functions
+// TODO: Refactor to accept client as parameter from API routes
+const supabase = createClient();
 
 // ============================================================================
 // TYPES

@@ -9,9 +9,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, LogOut, User } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils/cn';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { Button } from '@/components/ui/Button';
 
 interface HeaderProps {
   className?: string;
@@ -20,6 +22,7 @@ interface HeaderProps {
 export function Header({ className }: HeaderProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, signOut, isLoading } = useAuth();
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -69,12 +72,29 @@ export function Header({ className }: HeaderProps) {
 
           {/* Right side - Desktop */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
-              href="/decisions/new"
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
-            >
-              New Decision
-            </Link>
+            {user && (
+              <>
+                <Link
+                  href="/decisions/new"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
+                >
+                  New Decision
+                </Link>
+                <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <User className="h-4 w-4" />
+                    <span className="max-w-[150px] truncate">{user.email}</span>
+                  </div>
+                  <button
+                    onClick={() => signOut()}
+                    className="p-2 text-gray-600 hover:text-black transition-colors"
+                    title="Sign out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -115,13 +135,33 @@ export function Header({ className }: HeaderProps) {
                 </Link>
               );
             })}
-            <Link
-              href="/decisions/new"
-              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              New Decision
-            </Link>
+            {user && (
+              <>
+                <Link
+                  href="/decisions/new"
+                  className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-[#FF99C8] rounded-md hover:bg-[#FF80B8] transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  New Decision
+                </Link>
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="px-3 py-2 text-sm text-gray-600 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full px-3 py-2 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-50 rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </button>
+                </div>
+              </>
+            )}
           </nav>
         </div>
       )}
