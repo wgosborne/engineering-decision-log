@@ -1,0 +1,13 @@
+name: Keep Dev Database Alive
+
+on:
+  schedule:
+    - cron: '*/24 * * * *'  # Every 24 minutes
+  workflow_dispatch:  # Manual trigger if needed
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Dev
+        run: curl -s https://kvyssfgktkynqfzrxtmy.supabase.co/rest/v1/ || true
