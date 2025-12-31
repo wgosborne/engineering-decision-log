@@ -26,7 +26,7 @@ jobs:
         run: |
           curl -s -X GET \
             "https://trjmxxjtcfmqysxlpaeh.supabase.co/rest/v1/decisions?select=count&limit=1" \
-            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2eXNzZmdrdGt5bnFmenJ4dG15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzY5MDQsImV4cCI6MjA3ODYxMjkwNH0.Q8LG6n_g0ocu8ps78FlwHAzyPZOFzcSRw_G1LQcBE2U" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyam14eGp0Y2ZtcXlzeGxwYWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjU1ODgsImV4cCI6MjA3ODMwMTU4OH0.dgVbekg1aCG_HHnVHmBFdjMVohRtt28x-em7_R3cNaU" \
             -H "Content-Type: application/json" \
             -o /dev/null \
             -w "Prod Status: %{http_code}\n"
